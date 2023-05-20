@@ -1,0 +1,81 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Example : MonoBehaviour
+{
+
+
+    #region Camera Movement Variables 
+    public Camera playerCamera;
+    //Variable interne
+    private float yRotation = 0.0f ;
+    private float xRotation = 0.0f ;
+    public float mouseSensibility = 3.0f;
+    public float maxLookAngle = 90f ;
+    #endregion 
+
+    private Rigidbody playerRB ;
+
+    #region Movement
+    public float moveSpeed = 10f ;
+    public float maxVelocityChange = 7f;
+    #endregion
+
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked ;
+        playerRB = GetComponent<Rigidbody>();
+    }
+
+
+    // Update is called once per frame
+    void Update()
+    {        
+        #region MovementCamera
+        //Créer les entrees et calculer les mouvement de rotationde la caméra
+        yRotation = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensibility ;
+        xRotation = xRotation - Input.GetAxis("Mouse Y") * mouseSensibility ; 
+
+        xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+
+        //changer les valeur x et y pour créer le mouvement 
+        transform.localEulerAngles = new Vector3(0,yRotation,0);
+        playerCamera.transform.localEulerAngles = new Vector3(xRotation,0,0);
+        #endregion
+    }
+        
+
+
+
+    void FixedUpdate()
+    {    //Calcule axe horizon et verti
+        Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"),0,Input.GetAxis("Vertical"));
+        targetVelocity = transform.TransformDirection(targetVelocity) * moveSpeed;
+    
+  
+
+        //Apliquer la force de direction camera
+        Vector3 VelocityChange = targetVelocity - playerRB.velocity ;
+        VelocityChange.x = Mathf.Clamp(VelocityChange.x, -maxVelocityChange, maxVelocityChange);
+        VelocityChange.z = Mathf.Clamp(VelocityChange.z, -maxVelocityChange, maxVelocityChange);
+        VelocityChange.y = 0;
+
+        playerRB.AddForce(VelocityChange, ForceMode.VelocityChange);
+    
+        //Appliquer la gravitée
+        #region Gravity
+        Vector3 gravity = new Vector3(0,-1.5f, 0);
+        float gravityMultiplier = 10f;
+        gravity *= gravityMultiplier;
+
+        if(playerRB.velocity.y <0){
+            playerRB.AddForce(gravity, ForceMode.Force);
+            }
+        #endregion
+    }
+
+}
